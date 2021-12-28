@@ -171,13 +171,13 @@ struct IMU {
                         prev = val;
                         val = ypr[1] * 180/M_PI;
 
-                        if(val > prev){
-                          pitch = 90+abs(abs(abs(ypr[1] * 180/M_PI)-90)-90);
-                          Serial.print(pitch);
+                        if(val > prev) {
+                                pitch = 90+abs(abs(abs(ypr[1] * 180/M_PI)-90)-90);
+                                Serial.print(pitch);
                         }
                         else{
-                          pitch = 90-abs(abs(abs(ypr[1] * 180/M_PI)-90)-90);
-                          Serial.print(pitch);
+                                pitch = 90-abs(abs(abs(ypr[1] * 180/M_PI)-90)-90);
+                                Serial.print(pitch);
                         }
                         Serial.print("\t");
                         Serial.println(abs(ypr[2] * 180/M_PI));
@@ -210,7 +210,7 @@ struct TVC {
         void X80_testX(){
 
                 pos= 90 + offsetX;
-Serial.println(pos);
+                Serial.println(pos);
                 for (pos = 90 + offsetX; pos >= 75 +offsetX; pos -= 1) {
 
                         X08_X.write(pos);
@@ -232,33 +232,33 @@ Serial.println(pos);
 
                 X08_X.write(90 + offsetX);
 
-delay(100);
+                delay(100);
         }
 
         void X80_testY(){
 
-          pos= 90 + offsetY;
-Serial.println(pos);
-          for (pos = 90 + offsetY; pos >= 75 +offsetY; pos -= 1) {
+                pos= 90 + offsetY;
+                Serial.println(pos);
+                for (pos = 90 + offsetY; pos >= 75 +offsetY; pos -= 1) {
 
-                  X08_Y.write(pos);
-                  delay(15);
-          }
-          delay(15);
+                        X08_Y.write(pos);
+                        delay(15);
+                }
+                delay(15);
 
-          for (pos = 75 +offsetY; pos <= 105 + offsetY; pos += 1) {
+                for (pos = 75 +offsetY; pos <= 105 + offsetY; pos += 1) {
 
-                  X08_Y.write(pos);
-                  delay(15);
-          }
-          delay(15);
+                        X08_Y.write(pos);
+                        delay(15);
+                }
+                delay(15);
 
-          for (pos = 105 + offsetY; pos >= 90 + offsetY; pos -= 1) {
-                  X08_Y.write(pos);
-                  delay(15);
-          }
-          X08_Y.write(90 + offsetY);
-          delay(100);
+                for (pos = 105 + offsetY; pos >= 90 + offsetY; pos -= 1) {
+                        X08_Y.write(pos);
+                        delay(15);
+                }
+                X08_Y.write(90 + offsetY);
+                delay(100);
         }
 
 };
