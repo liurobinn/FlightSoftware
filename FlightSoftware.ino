@@ -36,6 +36,7 @@ VectorInt16 aaWorld;
 VectorFloat gravity;
 float euler[3];
 float ypr[3];
+float pitch;
 
 
 uint8_t teapotPacket[14] = { '$', 0x02, 0,0, 0,0, 0,0, 0,0, 0x00, 0x00, '\r', '\n' };
@@ -57,8 +58,7 @@ struct IMU {
                 Fastwire::setup(400, true);
           #endif
 
-                Serial.begin(115200);
-                while (!Serial);
+
 
 
                 mpu.initialize();
@@ -172,23 +172,17 @@ struct IMU {
                         val = ypr[1] * 180/M_PI;
 
                         if(val > prev){
-                          Serial.print(90+abs(abs(abs(ypr[1] * 180/M_PI)-90)-90));
+                          pitch = 90+abs(abs(abs(ypr[1] * 180/M_PI)-90)-90);
+                          Serial.print(pitch);
                         }
-                        if(val < prev){
-                          Serial.print(90-abs(abs(abs(ypr[1] * 180/M_PI)-90)-90));
+                        else{
+                          pitch = 90-abs(abs(abs(ypr[1] * 180/M_PI)-90)-90);
+                          Serial.print(pitch);
                         }
                         Serial.print("\t");
                         Serial.println(abs(ypr[2] * 180/M_PI));
         #endif
-/*
-        if(val > prev && 90+abs(abs(abs(ypr[1] * 180/M_PI)-90)-90)>80 && 90+abs(abs(abs(ypr[1] * 180/M_PI)-90)-90)< 90){
-          X08_X.write(90+abs(abs(abs(ypr[1] * 180/M_PI)-90)-90));
-        }
-        if(val < prev && 90+abs(abs(abs(ypr[1] * 180/M_PI)-90)-90)>80 && 90+abs(abs(abs(ypr[1] * 180/M_PI)-90)-90)< 90){
-          X08_X.write(90-abs(abs(abs(ypr[1] * 180/M_PI)-90)-90));
-        }
 
-*/
                         blinkState = !blinkState;
                         digitalWrite(LED_PIN, blinkState);
                 }
@@ -196,83 +190,75 @@ struct IMU {
 
 
 };
-
+double offsetX=-7;
+double offsetY=-6;
 struct TVC {
 
         double pos;
+
 
         void servo_init(){
 
                 X08_X.attach(3);
                 X08_Y.attach(4);
 
-                X08_X.write(83);
-                X08_Y.write(92);
+                X08_X.write(90+offsetX);
+                X08_Y.write(90+offsetY);
 
         }
 
         void X80_testX(){
 
-                pos= 83;
-
-                for (pos = 83; pos >= 68; pos -= 1) {
-
-                        X08_X.write(pos);
-                        delay(15);
-                }
-                delay(15);
-
-                for (pos = 68; pos <= 83; pos += 1) {
+                pos= 90 + offsetX;
+Serial.println(pos);
+                for (pos = 90 + offsetX; pos >= 75 +offsetX; pos -= 1) {
 
                         X08_X.write(pos);
                         delay(15);
                 }
                 delay(15);
 
-                for (pos = 83; pos <= 105; pos += 1) {
+                for (pos = 75 +offsetX; pos <= 105 + offsetX; pos += 1) {
+
                         X08_X.write(pos);
                         delay(15);
                 }
                 delay(15);
 
-                for (pos = 105; pos >= 83; pos -= 1) {
+                for (pos = 105 + offsetX; pos >= 90 + offsetX; pos -= 1) {
                         X08_X.write(pos);
                         delay(15);
                 }
-                delay(15);
 
+                X08_X.write(90 + offsetX);
+
+delay(100);
         }
 
         void X80_testY(){
 
-                pos= 92;
+          pos= 90 + offsetY;
+Serial.println(pos);
+          for (pos = 90 + offsetY; pos >= 75 +offsetY; pos -= 1) {
 
-                for (pos = 92; pos >= 75; pos -= 1) {
+                  X08_Y.write(pos);
+                  delay(15);
+          }
+          delay(15);
 
-                        X08_Y.write(pos);
-                        delay(15);
-                }
-                delay(15);
+          for (pos = 75 +offsetY; pos <= 105 + offsetY; pos += 1) {
 
-                for (pos = 75; pos <= 92; pos += 1) {
+                  X08_Y.write(pos);
+                  delay(15);
+          }
+          delay(15);
 
-                        X08_Y.write(pos);
-                        delay(15);
-                }
-                delay(15);
-
-                for (pos = 92; pos <= 105; pos += 1) {
-                        X08_Y.write(pos);
-                        delay(15);
-                }
-                delay(15);
-
-                for (pos = 105; pos >= 92; pos -= 1) {
-                        X08_Y.write(pos);
-                        delay(15);
-                }
-                delay(15);
-
+          for (pos = 105 + offsetY; pos >= 90 + offsetY; pos -= 1) {
+                  X08_Y.write(pos);
+                  delay(15);
+          }
+          X08_Y.write(90 + offsetY);
+          delay(100);
         }
 
 };
@@ -318,7 +304,7 @@ struct TVC tvc;
 struct IMU imu;
 
 void setup(){
-        Serial.begin(9600);
+        Serial.begin(115200);
         imu.init();
 
         Wire.begin();
@@ -336,10 +322,14 @@ void loop() {
         //tvc.X80_testY();
 
 
+        if (pitch >= 75 && pitch <= 105 ) {
 
-        if (abs(ypr[2] * 180/M_PI) >= 80 && abs(ypr[2] * 180/M_PI) <= 100 ) {
+                X08_X.write(pitch+offsetX);
+        }
 
-                X08_Y.write(abs(ypr[2] * 180/M_PI));
+        if (abs(ypr[2] * 180/M_PI) >= 75 && abs(ypr[2] * 180/M_PI) <= 105 ) {
+
+                X08_Y.write(abs(ypr[2] * 180/M_PI)+offsetY);
         }
 
 
