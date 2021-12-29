@@ -325,7 +325,11 @@ void setup(){
         tvc.X80_testY();
 
         if (!SD.begin(chipSelect)) {
+<<<<<<< HEAD
                 Serial.println("error");
+=======
+          Serial.println("error");
+>>>>>>> aed053e1519e1fcc600d5bc2875d5b0ae9eac2dc
                 return;
         }
         myFile = SD.open("TVC_test.txt", FILE_WRITE);
@@ -341,8 +345,13 @@ void loop() {
         //bmp280.update_Pressure();
         //tvc.X80_testX();
         //tvc.X80_testY();
+<<<<<<< HEAD
 
         Serial.println(micros()/1000000);
+=======
+        
+Serial.println(micros()/1000000);
+>>>>>>> aed053e1519e1fcc600d5bc2875d5b0ae9eac2dc
 
         if (pitch >= 75 && pitch <= 105 ) {
 
@@ -354,12 +363,20 @@ void loop() {
                 X08_Y.write(roll);
         }
 /*
+<<<<<<< HEAD
    myFile = SD.open("TVC_test.txt", FILE_WRITE);
+=======
+myFile = SD.open("TVC_test.txt", FILE_WRITE);
+>>>>>>> aed053e1519e1fcc600d5bc2875d5b0ae9eac2dc
         myFile.print("pitch/roll");myFile.print("\t");
         myFile.print(pitch);myFile.print("\t");
         myFile.println(roll);
         myFile.close();
+<<<<<<< HEAD
  */
+=======
+*/
+>>>>>>> aed053e1519e1fcc600d5bc2875d5b0ae9eac2dc
 
 
 
