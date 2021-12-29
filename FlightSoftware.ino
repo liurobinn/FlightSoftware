@@ -3,7 +3,12 @@
 #include "MPU6050_6Axis_MotionApps20.h"
 #include <Adafruit_BMP280.h>
 #include "Wire.h"
+#include <SD.h>
+#include <SPI.h>
 
+File myFile;
+
+const int chipSelect = BUILTIN_SDCARD;
 
 #if I2CDEV_IMPLEMENTATION == I2CDEV_ARDUINO_WIRE
     #include "Wire.h"
@@ -37,6 +42,7 @@ VectorFloat gravity;
 float euler[3];
 float ypr[3];
 float pitch;
+float roll;
 
 
 uint8_t teapotPacket[14] = { '$', 0x02, 0,0, 0,0, 0,0, 0,0, 0x00, 0x00, '\r', '\n' };
@@ -180,7 +186,8 @@ struct IMU {
                                 Serial.print(pitch);
                         }
                         Serial.print("\t");
-                        Serial.println(abs(ypr[2] * 180/M_PI));
+                        roll= abs(ypr[2] * 180/M_PI);
+                        Serial.println(roll);
         #endif
 
                         blinkState = !blinkState;
@@ -299,6 +306,11 @@ struct BMP280 {
         }
 };
 
+
+
+
+
+
 struct BMP280 bmp280;
 struct TVC tvc;
 struct IMU imu;
@@ -306,31 +318,50 @@ struct IMU imu;
 void setup(){
         Serial.begin(115200);
         imu.init();
-
         Wire.begin();
         bmp280.init();
         tvc.servo_init();
         tvc.X80_testX();
         tvc.X80_testY();
+
+        if (!SD.begin(chipSelect)) {
+          Serial.println("error");
+                return;
+        }
+        myFile = SD.open("TVC_test.txt", FILE_WRITE);
+
+
 }
 void loop() {
+
+
         imu.update();
         //bmp280.update_Temp();
         //bmp280.update_Alt();
         //bmp280.update_Pressure();
         //tvc.X80_testX();
         //tvc.X80_testY();
-
+        
+Serial.println(micros()/1000000);
 
         if (pitch >= 75 && pitch <= 105 ) {
 
                 X08_X.write(pitch+offsetX);
         }
 
-        if (abs(ypr[2] * 180/M_PI) >= 75 && abs(ypr[2] * 180/M_PI) <= 105 ) {
+        if (roll >= 75 && roll <= 105 ) {
 
-                X08_Y.write(abs(ypr[2] * 180/M_PI)+offsetY);
+                X08_Y.write(roll);
         }
+/*
+myFile = SD.open("TVC_test.txt", FILE_WRITE);
+        myFile.print("pitch/roll");myFile.print("\t");
+        myFile.print(pitch);myFile.print("\t");
+        myFile.println(roll);
+        myFile.close();
+*/
+
+
 
 
 }
