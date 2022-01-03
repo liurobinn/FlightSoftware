@@ -1,6 +1,7 @@
 #include "I2Cdev.h"
 #include <Servo.h>
 #include "MPU6050_6Axis_MotionApps20.h"
+#include "MPU6050.h"
 #include <Adafruit_BMP280.h>
 #include "Wire.h"
 #include <SD.h>
@@ -44,7 +45,9 @@ float ypr[3];
 float pitch;
 float roll;
 
-
+//=========================
+int16_t ax, ay, az;
+//=========================
 uint8_t teapotPacket[14] = { '$', 0x02, 0,0, 0,0, 0,0, 0,0, 0x00, 0x00, '\r', '\n' };
 volatile bool mpuInterrupt = false;
 void dmpDataReady() {
@@ -193,6 +196,14 @@ struct IMU {
                         blinkState = !blinkState;
                         digitalWrite(LED_PIN, blinkState);
                 }
+
+//===============================================================
+                accelgyro.getAcceleration(&ax, &ay, &az);
+
+                Serial.print(ax); Serial.print("\t");
+                Serial.print(ay); Serial.print("\t");
+                Serial.print(az); Serial.print("\t");
+//===============================================================
         }
 
 
@@ -331,6 +342,9 @@ void setup(){
                 return;
         }
         myFile = SD.open("TVC_test.txt", FILE_WRITE);
+        pinMode(10,OUTPUT);
+
+
 
 
 }
@@ -347,6 +361,9 @@ void loop() {
 
         Serial.println(micros()/1000000);
 
+//================================================
+//==== TVC Write Based on DMP data and offset ====
+//================================================
         if (pitch >= 75 && pitch <= 105 ) {
 
                 X08_X.write(pitch+offsetX);
@@ -354,8 +371,9 @@ void loop() {
 
         if (roll >= 75 && roll <= 105 ) {
 
-                X08_Y.write(roll);
+                X08_Y.write(roll+offsetY);
         }
+
 /*
 
    myFile = SD.open("TVC_test.txt", FILE_WRITE);
@@ -363,6 +381,7 @@ void loop() {
 
         myFile.print("pitch/roll");myFile.print("\t");
         myFile.print(pitch);myFile.print("\t");
+
         myFile.println(roll);
         myFile.close();
 
