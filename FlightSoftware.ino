@@ -11,23 +11,18 @@ File myFile;
 
 const int chipSelect = BUILTIN_SDCARD;
 
-#if I2CDEV_IMPLEMENTATION == I2CDEV_ARDUINO_WIRE
-    #include "Wire.h"
-#endif
-
-
 MPU6050 mpu;
 Adafruit_BMP280 bmp;
-
 Servo X08_X;
 Servo X08_Y;
 
 #define OUTPUT_READABLE_YAWPITCHROLL
 #define INTERRUPT_PIN 2
 #define LED_PIN 13
-bool blinkState = false;
 
+bool blinkState = false;
 bool dmpReady = false;
+
 uint8_t mpuIntStatus;
 uint8_t devStatus;
 uint16_t packetSize;
@@ -40,25 +35,22 @@ VectorInt16 aa;
 VectorInt16 aaReal;
 VectorInt16 aaWorld;
 VectorFloat gravity;
+
 float euler[3];
 float ypr[3];
 float pitch;
 float roll;
 
-
-
-
 int16_t ax, ay, az;
 
-uint8_t teapotPacket[14] = { '$', 0x02, 0,0, 0,0, 0,0, 0,0, 0x00, 0x00, '\r', '\n' };
 volatile bool mpuInterrupt = false;
+
 void dmpDataReady() {
         mpuInterrupt = true;
 }
 
 
 struct IMU {
-
 
         void init(){
                 // join I2C bus (I2Cdev library doesn't do this automatically)
@@ -69,19 +61,13 @@ struct IMU {
                 Fastwire::setup(400, true);
           #endif
 
-
-
-
                 mpu.initialize();
                 pinMode(INTERRUPT_PIN, INPUT);
 
                 Serial.println(mpu.testConnection() ? F("MPU6050 connection successful") : F("MPU6050 connection failed"));
 
-
-
                 Serial.println(F("Initializing DMP..."));
                 devStatus = mpu.dmpInitialize();
-
 
                 mpu.setXGyroOffset(220);
                 mpu.setYGyroOffset(76);
@@ -111,7 +97,8 @@ struct IMU {
 
                         // get expected DMP packet size for later comparison
                         packetSize = mpu.dmpGetFIFOPacketSize();
-                } else {
+                }
+                else {
                         // ERROR!
                         // 1 = initial memory load failed
                         // 2 = DMP configuration updates failed
@@ -127,7 +114,6 @@ struct IMU {
 
         void update(){
 
-
                 if (!dmpReady) return;
 
                 // wait for MPU interrupt or extra packet(s) available
@@ -136,16 +122,15 @@ struct IMU {
                                 // try to get out of the infinite loop
                                 fifoCount = mpu.getFIFOCount();
                         }
-
                 }
-
 
                 mpuInterrupt = false;
                 mpuIntStatus = mpu.getIntStatus();
-
                 fifoCount = mpu.getFIFOCount();
-                if(fifoCount < packetSize) {
 
+                if(fifoCount < packetSize) {
+                        //Lets go back and wait for another interrupt. We shouldn't be here, we got an interrupt from another event
+                        // This is blocking so don't do it   while (fifoCount < packetSize) fifoCount = mpu.getFIFOCount();
                 }
                 // check for overflow (this should never happen unless our code is too inefficient)
                 else if ((mpuIntStatus & (0x01 << MPU6050_INTERRUPT_FIFO_OFLOW_BIT)) || fifoCount >= 1024) {
@@ -165,9 +150,7 @@ struct IMU {
                                 fifoCount -= packetSize;
                         }
 
-
-
-        #ifdef OUTPUT_READABLE_YAWPITCHROLL
+#ifdef OUTPUT_READABLE_YAWPITCHROLL
                         // display Euler angles in degrees
                         mpu.dmpGetQuaternion(&q, fifoBuffer);
                         mpu.dmpGetGravity(&gravity, &q);
@@ -198,17 +181,13 @@ struct IMU {
                         blinkState = !blinkState;
                         digitalWrite(LED_PIN, blinkState);
                 }
-
-
-
-
         }
         void updateAcc(){
-          mpu.getAcceleration(&ax, &ay, &az);
+                mpu.getAcceleration(&ax, &ay, &az);
 
-          Serial.print(ax/16384.00); Serial.print("\t");
-          Serial.print(ay/16384.00); Serial.print("\t");
-          Serial.print(az/16384.00); Serial.print("\t");
+                Serial.print(ax/16384.00); Serial.print("\t");
+                Serial.print(ay/16384.00); Serial.print("\t");
+                Serial.print(az/16384.00); Serial.print("\t");
         }
 
 
@@ -322,11 +301,6 @@ struct BMP280 {
         }
 };
 
-
-
-
-
-
 struct BMP280 bmp280;
 struct TVC tvc;
 struct IMU imu;
@@ -341,9 +315,7 @@ void setup(){
         tvc.X80_testY();
 
         if (!SD.begin(chipSelect)) {
-
                 Serial.println("error");
-
                 return;
         }
 
@@ -360,58 +332,39 @@ void setup(){
         myFile.print("Humidity"); myFile.print("\t");
         myFile.println("Pressure");
         myFile.close();
-
-
-delay(500);
-
-
 }
 void loop() {
-
-
         imu.update();
         imu.updateAcc();
         //bmp280.update_Temp();
         //bmp280.update_Alt();
         bmp280.update_Pressure();
-        //tvc.X80_testX();
-        //tvc.X80_testY();
 
-
-        Serial.println(micros()/1000000);
 
 //================================================
 //==== TVC Write Based on DMP data and offset ====
 //================================================
         if (pitch >= 75 && pitch <= 105 ) {
-
                 X08_X.write(pitch+offsetX);
         }
 
         if (roll >= 75 && roll <= 105 ) {
-
                 X08_Y.write(roll+offsetY);
         }
 
 
-   myFile = SD.open("TVC_test.csv", FILE_WRITE);
-   myFile.print(micros()/1000000.000);myFile.print("\t");
-   myFile.print(roll-90); myFile.print("\t");
-   myFile.print(pitch-90); myFile.print("\t");
-   myFile.print("0"); myFile.print("\t");
-   myFile.print(ax/16384.00); myFile.print("\t");
-   myFile.print(ay/16384.00); myFile.print("\t");
-   myFile.print(az/16384.00); myFile.print("\t");
-   myFile.print("0"); myFile.print("\t");
-   myFile.print("0"); myFile.print("\t");
-   myFile.print("0"); myFile.print("\t");
-   myFile.println(bmp.readPressure());
+        myFile = SD.open("TVC_test.csv", FILE_WRITE);
+        myFile.print(micros()/1000000.000); myFile.print("\t");
+        myFile.print(roll-90); myFile.print("\t");
+        myFile.print(pitch-90); myFile.print("\t");
+        myFile.print("0"); myFile.print("\t");
+        myFile.print(ax/16384.00); myFile.print("\t");
+        myFile.print(ay/16384.00); myFile.print("\t");
+        myFile.print(az/16384.00); myFile.print("\t");
+        myFile.print("0"); myFile.print("\t");
+        myFile.print("0"); myFile.print("\t");
+        myFile.print("0"); myFile.print("\t");
+        myFile.println(bmp.readPressure());
         myFile.close();
-
-
-
-
-
-
 
 }
