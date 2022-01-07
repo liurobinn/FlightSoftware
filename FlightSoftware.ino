@@ -45,9 +45,11 @@ float ypr[3];
 float pitch;
 float roll;
 
-//=========================
+
+
+
 int16_t ax, ay, az;
-//=========================
+
 uint8_t teapotPacket[14] = { '$', 0x02, 0,0, 0,0, 0,0, 0,0, 0x00, 0x00, '\r', '\n' };
 volatile bool mpuInterrupt = false;
 void dmpDataReady() {
@@ -197,13 +199,16 @@ struct IMU {
                         digitalWrite(LED_PIN, blinkState);
                 }
 
-//===============================================================
-                accelgyro.getAcceleration(&ax, &ay, &az);
 
-                Serial.print(ax); Serial.print("\t");
-                Serial.print(ay); Serial.print("\t");
-                Serial.print(az); Serial.print("\t");
-//===============================================================
+
+
+        }
+        void updateAcc(){
+          mpu.getAcceleration(&ax, &ay, &az);
+
+          Serial.print(ax/16384.00); Serial.print("\t");
+          Serial.print(ay/16384.00); Serial.print("\t");
+          Serial.print(az/16384.00); Serial.print("\t");
         }
 
 
@@ -341,10 +346,23 @@ void setup(){
 
                 return;
         }
-        myFile = SD.open("TVC_test.txt", FILE_WRITE);
-        pinMode(10,OUTPUT);
+
+        myFile = SD.open("TVC_test.csv", FILE_WRITE);
+        myFile.print("Time (S)"); myFile.print("\t");
+        myFile.print("Rotation X (deg)"); myFile.print("\t");
+        myFile.print("Rotation Y (deg)"); myFile.print("\t");
+        myFile.print("Rotation Z (deg)"); myFile.print("\t");
+        myFile.print("Accel X (g)"); myFile.print("\t");
+        myFile.print("Accel Y (g)"); myFile.print("\t");
+        myFile.print("Accel Z (g)"); myFile.print("\t");
+        myFile.print("Altitude (ft)"); myFile.print("\t");
+        myFile.print("Temp (F)"); myFile.print("\t");
+        myFile.print("Humidity"); myFile.print("\t");
+        myFile.println("Pressure");
+        myFile.close();
 
 
+delay(500);
 
 
 }
@@ -352,9 +370,10 @@ void loop() {
 
 
         imu.update();
+        imu.updateAcc();
         //bmp280.update_Temp();
         //bmp280.update_Alt();
-        //bmp280.update_Pressure();
+        bmp280.update_Pressure();
         //tvc.X80_testX();
         //tvc.X80_testY();
 
@@ -374,18 +393,21 @@ void loop() {
                 X08_Y.write(roll+offsetY);
         }
 
-/*
 
-   myFile = SD.open("TVC_test.txt", FILE_WRITE);
-
-
-        myFile.print("pitch/roll");myFile.print("\t");
-        myFile.print(pitch);myFile.print("\t");
-
-        myFile.println(roll);
+   myFile = SD.open("TVC_test.csv", FILE_WRITE);
+   myFile.print(micros()/1000000.000);myFile.print("\t");
+   myFile.print(roll-90); myFile.print("\t");
+   myFile.print(pitch-90); myFile.print("\t");
+   myFile.print("0"); myFile.print("\t");
+   myFile.print(ax/16384.00); myFile.print("\t");
+   myFile.print(ay/16384.00); myFile.print("\t");
+   myFile.print(az/16384.00); myFile.print("\t");
+   myFile.print("0"); myFile.print("\t");
+   myFile.print("0"); myFile.print("\t");
+   myFile.print("0"); myFile.print("\t");
+   myFile.println(bmp.readPressure());
         myFile.close();
 
- */
 
 
 
