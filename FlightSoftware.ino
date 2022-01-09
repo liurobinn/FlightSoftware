@@ -40,6 +40,7 @@ float euler[3];
 float ypr[3];
 float pitch;
 float roll;
+float yaw;
 
 int16_t ax, ay, az;
 
@@ -156,7 +157,7 @@ struct IMU {
                         mpu.dmpGetGravity(&gravity, &q);
                         mpu.dmpGetYawPitchRoll(ypr, &q, &gravity);
                         Serial.print("ypr\t");
-                        Serial.print(ypr[0] * 180/M_PI);
+                        Serial.print(yaw);
                         Serial.print("\t");
 
                         double val;
@@ -175,6 +176,7 @@ struct IMU {
                         }
                         Serial.print("\t");
                         roll= abs(ypr[2] * 180/M_PI);
+                        yaw= ypr[0] * 180/M_PI;
                         Serial.println(roll);
         #endif
 
@@ -301,10 +303,78 @@ struct BMP280 {
         }
 };
 
+struct LED {
+        void init(){
+                pinMode(14, OUTPUT);
+                pinMode(15, OUTPUT);
+                pinMode(16, OUTPUT);
+        }
+        void initIndicator(){
+                digitalWrite(14,LOW);
+                delay(200);
+                digitalWrite(14,HIGH);
+                delay(200);
+                digitalWrite(15,LOW);
+                delay(200);
+                digitalWrite(15,HIGH);
+                delay(200);
+                digitalWrite(16,LOW);
+                delay(200);
+                digitalWrite(16,HIGH);
+                delay(200);
+        }
+        void imuCheckX(){
+                if((roll-90)>=-3 && (roll-90)<=3) {
+                        digitalWrite(14, LOW);
+                }
+                if((roll-90)<=-3 || (roll-90)>=3) {
+                        digitalWrite(14, HIGH);
+                }
+        }
+
+        void imuCheckY(){
+                if((pitch-90)>=-3 && (pitch-90)<=3) {
+                        digitalWrite(15, LOW);
+                }
+                if((pitch-90)<=-3 || (pitch-90)>=3) {
+                        digitalWrite(15, HIGH);
+                }
+        }
+};
+
+struct Buzzer {
+        void init(){
+                pinMode(10,OUTPUT);
+        }
+        void initIndicator(){
+                digitalWrite(10,HIGH);
+                delay(200);
+                digitalWrite(10,LOW);
+                delay(200);
+                digitalWrite(10,HIGH);
+                delay(200);
+                digitalWrite(10,LOW);
+                delay(200);
+                digitalWrite(10,HIGH);
+                delay(200);
+                digitalWrite(10,LOW);
+                delay(200);
+                digitalWrite(10,HIGH);
+                delay(200);
+                digitalWrite(10,LOW);
+                delay(200);
+                digitalWrite(10,HIGH);
+                delay(200);
+                digitalWrite(10,LOW);
+                delay(200);
+        }
+};
 struct BMP280 bmp280;
 struct TVC tvc;
 struct IMU imu;
-
+struct LED led;
+struct Buzzer buzzer;
+double processTime;
 void setup(){
         Serial.begin(115200);
         imu.init();
@@ -313,14 +383,17 @@ void setup(){
         tvc.servo_init();
         tvc.X80_testX();
         tvc.X80_testY();
-
+        led.init();
+        led.initIndicator();
+        buzzer.init();
+        buzzer.initIndicator();
         if (!SD.begin(chipSelect)) {
                 Serial.println("error");
                 return;
         }
 
         myFile = SD.open("TVC_test.csv", FILE_WRITE);
-        myFile.print("Time (S)"); myFile.print("\t");
+        myFile.print("Time (s)"); myFile.print("\t");
         myFile.print("Rotation X (deg)"); myFile.print("\t");
         myFile.print("Rotation Y (deg)"); myFile.print("\t");
         myFile.print("Rotation Z (deg)"); myFile.print("\t");
@@ -332,7 +405,12 @@ void setup(){
         myFile.print("Humidity"); myFile.print("\t");
         myFile.println("Pressure");
         myFile.close();
+
+        processTime = micros()/1000000.000;
 }
+
+
+
 void loop() {
         imu.update();
         imu.updateAcc();
@@ -340,10 +418,10 @@ void loop() {
         //bmp280.update_Alt();
         bmp280.update_Pressure();
 
-
-//================================================
-//==== TVC Write Based on DMP data and offset ====
-//================================================
+/*
+   //================================================
+   //==== TVC Write Based on DMP data and offset ====
+   //================================================
         if (pitch >= 75 && pitch <= 105 ) {
                 X08_X.write(pitch+offsetX);
         }
@@ -351,20 +429,25 @@ void loop() {
         if (roll >= 75 && roll <= 105 ) {
                 X08_Y.write(roll+offsetY);
         }
-
+ */
 
         myFile = SD.open("TVC_test.csv", FILE_WRITE);
-        myFile.print(micros()/1000000.000); myFile.print("\t");
+        myFile.print(micros()/1000000.000-processTime); myFile.print("\t");
         myFile.print(roll-90); myFile.print("\t");
         myFile.print(pitch-90); myFile.print("\t");
-        myFile.print("0"); myFile.print("\t");
-        myFile.print(ax/16384.00); myFile.print("\t");
-        myFile.print(ay/16384.00); myFile.print("\t");
-        myFile.print(az/16384.00); myFile.print("\t");
+        myFile.print(yaw); myFile.print("\t");
+
+        myFile.print(-az/16384.00); myFile.print("\t");
+        myFile.print(-ay/16384.00); myFile.print("\t");
+        myFile.print(-ay/16384.00); myFile.print("\t");
         myFile.print("0"); myFile.print("\t");
         myFile.print("0"); myFile.print("\t");
         myFile.print("0"); myFile.print("\t");
         myFile.println(bmp.readPressure());
         myFile.close();
+
+        led.imuCheckX();
+
+        led.imuCheckY();
 
 }
