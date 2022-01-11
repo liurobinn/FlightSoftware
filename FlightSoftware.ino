@@ -383,10 +383,10 @@ void setup(){
         tvc.servo_init();
         tvc.X80_testX();
         tvc.X80_testY();
-        led.init();
-        led.initIndicator();
+        //led.init();
+        //led.initIndicator();
         buzzer.init();
-        buzzer.initIndicator();
+        //buzzer.initIndicator();
         if (!SD.begin(chipSelect)) {
                 Serial.println("error");
                 return;
@@ -437,8 +437,8 @@ void loop() {
         myFile.print(pitch-90); myFile.print("\t");
         myFile.print(yaw); myFile.print("\t");
 
+        myFile.print(-ax/16384.00); myFile.print("\t");
         myFile.print(-az/16384.00); myFile.print("\t");
-        myFile.print(-ay/16384.00); myFile.print("\t");
         myFile.print(-ay/16384.00); myFile.print("\t");
         myFile.print("0"); myFile.print("\t");
         myFile.print("0"); myFile.print("\t");
