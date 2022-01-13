@@ -267,6 +267,10 @@ struct TVC {
 
 };
 
+double temperature=bmp.readTemperature();
+double pressure=bmp.readPressure();
+double altitude=bmp.readAltitude(1017.27); //in hPa
+
 struct BMP280 {
         void init(){
 
@@ -286,19 +290,19 @@ struct BMP280 {
 
         void update_Temp(){
                 Serial.print(F("Temp:"));
-                Serial.print(bmp.readTemperature());
+                Serial.print(temperature);
                 Serial.print(" *C"); Serial.println("\t");
         }
 
         void update_Pressure(){
                 Serial.print(F("Pressure:"));
-                Serial.print(bmp.readPressure());
+                Serial.print(pressure);
                 Serial.print(" Pa"); Serial.print("\t");
         }
 
         void update_Alt(){
                 Serial.print(F("Alt:"));
-                Serial.print(bmp.readAltitude(1013.25)); /* Adjusted to local forecast! */
+                Serial.print(altitude);
                 Serial.print(" m"); Serial.println("\t");
         }
 };
@@ -383,7 +387,7 @@ void setup(){
         tvc.servo_init();
         tvc.X80_testX();
         tvc.X80_testY();
-        //led.init();
+        led.init();
         //led.initIndicator();
         buzzer.init();
         //buzzer.initIndicator();
@@ -414,8 +418,8 @@ void setup(){
 void loop() {
         imu.update();
         imu.updateAcc();
-        //bmp280.update_Temp();
-        //bmp280.update_Alt();
+        bmp280.update_Temp();
+        bmp280.update_Alt();
         bmp280.update_Pressure();
 
 /*
@@ -440,14 +444,14 @@ void loop() {
         myFile.print(-ax/16384.00); myFile.print("\t");
         myFile.print(-az/16384.00); myFile.print("\t");
         myFile.print(-ay/16384.00); myFile.print("\t");
+        myFile.print(altitude); myFile.print("\t");
+        myFile.print(temperature); myFile.print("\t");
         myFile.print("0"); myFile.print("\t");
-        myFile.print("0"); myFile.print("\t");
-        myFile.print("0"); myFile.print("\t");
-        myFile.println(bmp.readPressure());
+        myFile.println(pressure);
         myFile.close();
 
-        led.imuCheckX();
+        //led.imuCheckX();
 
-        led.imuCheckY();
+        //led.imuCheckY();
 
 }
