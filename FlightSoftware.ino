@@ -156,9 +156,9 @@ struct IMU {
                         mpu.dmpGetQuaternion(&q, fifoBuffer);
                         mpu.dmpGetGravity(&gravity, &q);
                         mpu.dmpGetYawPitchRoll(ypr, &q, &gravity);
-                        Serial.print("ypr\t");
-                        Serial.print(yaw);
-                        Serial.print("\t");
+                        //Serial.print("ypr\t");
+                        //Serial.print(yaw);
+                        //Serial.print("\t");
 
                         double val;
                         double prev;
@@ -168,16 +168,16 @@ struct IMU {
 
                         if(val > prev) {
                                 pitch = 90+abs(abs(abs(ypr[1] * 180/M_PI)-90)-90);
-                                Serial.print(pitch);
+                                //Serial.print(pitch);
                         }
                         else{
                                 pitch = 90-abs(abs(abs(ypr[1] * 180/M_PI)-90)-90);
-                                Serial.print(pitch);
+                                //Serial.print(pitch);
                         }
-                        Serial.print("\t");
+                        //Serial.print("\t");
                         roll= abs(ypr[2] * 180/M_PI);
                         yaw= ypr[0] * 180/M_PI;
-                        Serial.println(roll);
+                        //Serial.println(roll);
         #endif
 
                         blinkState = !blinkState;
@@ -186,10 +186,11 @@ struct IMU {
         }
         void updateAcc(){
                 mpu.getAcceleration(&ax, &ay, &az);
-
+/*
                 Serial.print(ax/16384.00); Serial.print("\t");
                 Serial.print(ay/16384.00); Serial.print("\t");
                 Serial.print(az/16384.00); Serial.print("\t");
+*/
         }
 
 
@@ -267,10 +268,6 @@ struct TVC {
 
 };
 
-double temperature=bmp.readTemperature();
-double pressure=bmp.readPressure();
-double altitude=bmp.readAltitude(1017.27); //in hPa
-
 struct BMP280 {
         void init(){
 
@@ -288,22 +285,28 @@ struct BMP280 {
                                 Adafruit_BMP280::STANDBY_MS_500); /* Standby time. */
         }
 
-        void update_Temp(){
+        void serial_update_Temp(){
+          /*
                 Serial.print(F("Temp:"));
-                Serial.print(temperature);
+                Serial.print(bmp.readTemperature());
                 Serial.print(" *C"); Serial.println("\t");
+          */
         }
 
-        void update_Pressure(){
+        void serial_update_Pressure(){
+          /*
                 Serial.print(F("Pressure:"));
-                Serial.print(pressure);
+                Serial.print(bmp.readPressure());
                 Serial.print(" Pa"); Serial.print("\t");
+          */
         }
 
-        void update_Alt(){
+        void serial_update_Alt(){
+          /*
                 Serial.print(F("Alt:"));
-                Serial.print(altitude);
+                Serial.print(bmp.readAltitude(1013.25));
                 Serial.print(" m"); Serial.println("\t");
+          */
         }
 };
 
@@ -388,11 +391,11 @@ void setup(){
         tvc.X80_testX();
         tvc.X80_testY();
         led.init();
-        //led.initIndicator();
+        led.initIndicator();
         buzzer.init();
-        //buzzer.initIndicator();
+        buzzer.initIndicator();
         if (!SD.begin(chipSelect)) {
-                Serial.println("error");
+                //Serial.println("error");
                 return;
         }
 
@@ -418,9 +421,6 @@ void setup(){
 void loop() {
         imu.update();
         imu.updateAcc();
-        bmp280.update_Temp();
-        bmp280.update_Alt();
-        bmp280.update_Pressure();
 
 /*
    //================================================
@@ -429,29 +429,51 @@ void loop() {
         if (pitch >= 75 && pitch <= 105 ) {
                 X08_X.write(pitch+offsetX);
         }
-
         if (roll >= 75 && roll <= 105 ) {
                 X08_Y.write(roll+offsetY);
         }
  */
 
+//SD Write
         myFile = SD.open("TVC_test.csv", FILE_WRITE);
         myFile.print(micros()/1000000.000-processTime); myFile.print("\t");
         myFile.print(roll-90); myFile.print("\t");
         myFile.print(pitch-90); myFile.print("\t");
         myFile.print(yaw); myFile.print("\t");
 
-        myFile.print(-ax/16384.00); myFile.print("\t");
         myFile.print(-az/16384.00); myFile.print("\t");
         myFile.print(-ay/16384.00); myFile.print("\t");
-        myFile.print(altitude); myFile.print("\t");
-        myFile.print(temperature); myFile.print("\t");
+        myFile.print(-ax/16384.00); myFile.print("\t");
+        myFile.print(bmp.readAltitude(1028.44)); myFile.print("\t");
+        myFile.print(bmp.readTemperature()); myFile.print("\t");
         myFile.print("0"); myFile.print("\t");
-        myFile.println(pressure);
+        myFile.println(bmp.readPressure());
         myFile.close();
+// Serial Output
+        Serial.print("Time:");Serial.print("\t");
+        Serial.print(micros()/1000000.000-processTime); Serial.print("\t");
+        Serial.print("Roll:");Serial.print("\t");
+        Serial.print(roll-90); Serial.print("\t");
+        Serial.print("Pitch:");Serial.print("\t");
+        Serial.print(pitch-90); Serial.print("\t");
+        Serial.print("Yaw:");Serial.print("\t");
+        Serial.print(yaw); Serial.print("\t");
+        Serial.print("AccX:");Serial.print("\t");
+        Serial.print(-az/16384.00); Serial.print("\t");
+        Serial.print("AccY:");Serial.print("\t");
+        Serial.print(-ay/16384.00); Serial.print("\t");
+        Serial.print("AccZ:");Serial.print("\t");
+        Serial.print(-ax/16384.00); Serial.print("\t");
+        Serial.print("Alt:");Serial.print("\t");
+        Serial.print(bmp.readAltitude(1028.44)); Serial.print("\t");
+        Serial.print("Temp:");Serial.print("\t");
+        Serial.print(bmp.readTemperature()); Serial.print("\t");
+        Serial.print("Humidity:");Serial.print("\t");
+        Serial.print("0"); Serial.print("\t");
+        Serial.print("Pressure:");Serial.print("\t");
+        Serial.println(bmp.readPressure());
+        led.imuCheckX();
 
-        //led.imuCheckX();
-
-        //led.imuCheckY();
+        led.imuCheckY();
 
 }
