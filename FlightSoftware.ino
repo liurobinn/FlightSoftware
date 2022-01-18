@@ -449,6 +449,7 @@ void loop() {
         myFile.print("0"); myFile.print("\t");
         myFile.println(bmp.readPressure());
         myFile.close();
+        
 // Serial Output
         Serial.print("Time:");Serial.print("\t");
         Serial.print(micros()/1000000.000-processTime); Serial.print("\t");
